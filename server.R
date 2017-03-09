@@ -34,11 +34,11 @@ shinyServer(function(input, output) {
     
     ik <- smooth(k)
     val2 <- matrix(NA, nrow = bands, ncol = ik)
-    val3 <- matrix(NA, nrow = bands, ncol = ik)
+    val3 <- matrix(NA, nrow = bands, ncol = k)
     med3 <- spline(xy.coords(med), n = ik)$y
     
     for (j in 1:bands) {
-      val3[j,] <- approx(xy.coords(val[j,]), n = ik)$y
+      val3[j,] <- xy.coords(val[j,])$y
       val2[j,] <- spline(xy.coords(val[j,]), n = ik)$y
     }
     
@@ -67,14 +67,15 @@ shinyServer(function(input, output) {
     par(mar = c(2,2,2,2))
 
     grid()
-    plot(ts((val[3,] + val[4,])/2, frequency = smoothing), ylim = c(-10,2))
+    plot((val[3,] + val[4,])/2, type="p", pch=18, ylim = c(-10,2))
     
-    fan(ival, data.type = "values", start = start(ival), type = "interval",
+    fan(ival, data.type = "values", start = start(ival), 
+        type = "interval",
         probs = c(0.70, 0.85, 0.975),
         fan.col = colorRampPalette(c("tomato", "gray90")), alpha = 0.5,
         frequency = smoothing)
 
-    lines(ts(med, start = start(med), frequency = smoothing), col = "black")
+    #lines(ts(med, start = start(med), frequency = smoothing), col = "black")
 
   })
 

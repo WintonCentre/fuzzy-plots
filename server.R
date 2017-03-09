@@ -67,13 +67,14 @@ shinyServer(function(input, output) {
     par(mar = c(2,2,2,2))
 
     grid()
-    plot((val[3,] + val[4,])/2, ylim = c(-10,2))
+    plot(ts((val[3,] + val[4,])/2, frequency = smoothing), ylim = c(-10,2))
     
-    fan(ival, data.type = "values", start = start(ival), type = "interval", 
+    fan(ival, data.type = "values", start = start(ival), type = "interval",
         probs = c(0.70, 0.85, 0.975),
-        fan.col = colorRampPalette(c("tomato", "gray90")), alpha = 0.5)
-    
-    lines(ts(med, start = start(med)), col = "black")
+        fan.col = colorRampPalette(c("tomato", "gray90")), alpha = 0.5,
+        frequency = smoothing)
+
+    lines(ts(med, start = start(med), frequency = smoothing), col = "black")
 
   })
 

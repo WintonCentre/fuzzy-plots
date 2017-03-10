@@ -1,41 +1,41 @@
 library(shiny)
 library(fanplot)
+library(plyr)
 
-
-
-# smooth_frame <- function(df) {
-#   df1 <- data.frame(x = approx)
-# 
-#   ###
-#   smoothed_val <- matrix(NA, nrow = bands, ncol = smoothed_k)
-#   xyval <- matrix(NA, nrow = bands, ncol = k)
-#   med3 <- spline(xy.coords(med), n = smoothed_k)$y
-# 
-#   for (j in 1:bands) {
-#     xyval[j,] <- xy.coords(val[j,])$y
-#     smoothed_val[j,] <- spline(xy.coords(val[j,]), n = smoothed_k)$y
-#   }
-# 
-#   return(list(original_val = xyval, smoothed_val = smoothed_val, med = med3))
-# 
-# }
-use_field_m_as_n <- function(df, m, n) {
-  rdf <- df
-  if (m != n) {
-    rdf[[n]] <- df[[m]]
-    rdf[[m]] <- NULL
-  }
-  return(rdf)
+smooth_df <- function(df, frequency) {
+  k <- nrow(df)
+  smoothed_k <- frequency*(k - 1) + 1
+  return(data.frame(x = spline(df$x, n=smoothed_k)$y,
+                    mode = spline(df$mode,n=smoothed_k)$y,
+                    sd = spline(df$mode, n=smoothed_k)$y))
 }
 
-extract_nominated <- function(df, nominated) {
-  # Extract nominated fields t make a new data.frame for further processing
-  rdf <- df
-  for (name in names(df)) {
-    if (!(name %in% nominated))
-      rdf[[name]] <- NULL
+expand_df <- function(df, percentiles) {
+  k <- nrow(df)
+  bands <- length(percentiles)
+  
+  val <- matrix(NA, nrow = bands, ncol = k)
+  for (i in 1:k) {
+    val[, i] <- qsplitnorm(p = percentiles,
+                           mode = df$mode[i],
+                           sd = df$sd[i],
+                           skew = df$skew[i])
   }
-  return(rdf)
+  return(val)
+}
+
+expand_med <- function(df, percentiles) {
+  k <- nrow(df)
+  bands <- length(percentiles)
+  
+  med <- rep(NA, k)
+  for (i in 1:k) {
+    med[i] <- qsplitnorm(p = 0.5,
+                         mode = df$mode[i],
+                         sd = df$sd[i],
+                         skew = df$skew[i])
+  }
+  return(med)
 }
 
 expand <- function(df, percentiles) {
@@ -70,11 +70,11 @@ smooth_and_expand <- function(df, smoothing, percentiles) {
     val[, i] <- qsplitnorm(p = percentiles, 
                            mode = df$mode[i],
                            sd = df$sd[i],
-                           skew = df$skew[i])
+                           skew = 0)
     med[i] <- qsplitnorm(p = 0.5,
                          mode = df$mode[i],
                          sd = df$sd[i],
-                         skew = df$skew[i])
+                         skew = 0)
   }
   
   smoothed_val <- matrix(NA, nrow = bands, ncol = smoothed_k)
@@ -86,7 +86,7 @@ smooth_and_expand <- function(df, smoothing, percentiles) {
     smoothed_val[j,] <- spline(xy.coords(val[j,]), n = smoothed_k)$y
   }
   
-  return(list(original_val = xyval, smoothed_val = smoothed_val, med = med3))
+  return(list(original_val = val, smoothed_val = smoothed_val, med = med3))
 }
 
 shinyServer(function(input, output, session) {
@@ -107,13 +107,13 @@ shinyServer(function(input, output, session) {
       )
     }
     
-    if (input$xLabel == "") {
-      updateTextInput(session, "xLabel", value = names(df1)[1])
-    }
-
-    if (input$modeLabel == "") {
-      updateTextInput(session, "modeLabel", value = names(df1)[2])
-    }
+    # if (input$xLabel == "") {
+    #   updateTextInput(session, "xLabel", value = names(df1)[1])
+    # }
+    # 
+    # if (input$modeLabel == "") {
+    #   updateTextInput(session, "modeLabel", value = names(df1)[2])
+    # }
     
     
     # first parameter to renderDataTable is df1
@@ -127,7 +127,16 @@ shinyServer(function(input, output, session) {
       return(NULL)
     
     df1 <- read.csv(inFile$datapath, header = input$header)
-
+    
+    
+    # redefine df1 with internal names, "x", "mode", and "sd".
+    if(input$x != "" && input$mode != "" && input$sd != "") {
+      x <- df1[[input$x]]
+      mode <- df1[[input$mode]]
+      sd <- df1[[input$sd]]
+      df1 <- data.frame(x = x, mode = mode, sd = sd)
+    }  
+    
     # smooth data frame values and parameters
     # expand uncertainties
     smoothing <- 2

@@ -98,13 +98,24 @@ shinyServer(function(input, output, session) {
     
     df1 <- read.csv(inFile$datapath, header = input$header)
     
-    # Can also set the label and select items
-    for (n in c("x","mode","sd")) {
-      updateSelectInput(session, n,
+    # Update dropdowns in UI with column names read from csv file
+    internal_names <- c("x","mode","sd")
+    for (i in 1:length(internal_names)) {
+      updateSelectInput(session, internal_names[i],
                         choices = names(df1),
-                        selected = character(0)
+                        selected = internal_names[i]
       )
     }
+    
+    if (input$xLabel == "") {
+      updateTextInput(session, "xLabel", value = names(df1)[1])
+    }
+
+    if (input$modeLabel == "") {
+      updateTextInput(session, "modeLabel", value = names(df1)[2])
+    }
+    
+    
     # first parameter to renderDataTable is df1
     df1
   }, options = list(filter = FALSE, searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE))
@@ -127,16 +138,23 @@ shinyServer(function(input, output, session) {
     smoothed_val <- smoothed_expanded$smoothed_val
     med <- smoothed_expanded$med
 
-    par(mar = c(2,2,2,2))
+    par(mar = c(4,4,4,4))
 
     grid()
-    plot((original_val[3,] + original_val[4,])/2, type = "p", pch = 18, ylim = c(-10,2))
+    plot((original_val[3,] + original_val[4,])/2,
+         type = "p", pch = 18, ylim = c(-10,2),
+         xlab = input$xLabel,
+         ylab = input$modeLabel,
+         main = input$mainTitle
+        )
     
-    fan(smoothed_val, data.type = "values", start = start(smoothed_val), 
+    if (input$expand) {
+        fan(smoothed_val, data.type = "values", start = start(smoothed_val), 
         type = "interval",
         probs = c(0.70, 0.85, 0.975),
         fan.col = colorRampPalette(c("tomato", "gray90")), alpha = 0.5,
         frequency = smoothing)
+    }
 
     lines(ts(med, start = start(med), frequency = smoothing), col = "black")
 

@@ -14,12 +14,22 @@ shinyUI(pageWithSidebar(
                   ".csv")
       ),
       
-      checkboxInput("header", "File contains headers in first row", TRUE)
+      checkboxInput("header", "File contains headers in first row", TRUE),
+      textInput("mainTitle", "Plot title:", "Main Title"),
+      checkboxInput("expand", "Show uncertainty", FALSE)
+      
+    ),
+    
+    inputPanel(
+      selectInput("x", "Independent variable:", c(), "x"),
+      textInput("xLabel", "Axis label")
     ),
     inputPanel(
-      selectInput("x", "Column containing time:", c("x","mode","sd"), "x"),
-      selectInput("mode", "Column containing values:", c("x","mode","sd"), "mode"),
-      selectInput("sd", "Column containing standard deviation:", c("x","mode","sd"), "sd")
+      selectInput("mode", "Dependent variable:", c(), "mode"),
+      textInput("modeLabel", "Axis label")
+    ),
+    inputPanel(
+      selectInput("sd", "Standard deviation:", c(), "sd")
     )
 
   ),

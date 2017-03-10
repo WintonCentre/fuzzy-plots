@@ -35,16 +35,16 @@ shinyServer(function(input, output) {
     }
     
     ik <- smooth(k)
-    val2 <- matrix(NA, nrow = bands, ncol = ik)
-    val3 <- matrix(NA, nrow = bands, ncol = k)
+    smoothed_val <- matrix(NA, nrow = bands, ncol = ik)
+    xyval <- matrix(NA, nrow = bands, ncol = k)
     med3 <- spline(xy.coords(med), n = ik)$y
     
     for (j in 1:bands) {
-      val3[j,] <- xy.coords(val[j,])$y
-      val2[j,] <- spline(xy.coords(val[j,]), n = ik)$y
+      xyval[j,] <- xy.coords(val[j,])$y
+      smoothed_val[j,] <- spline(xy.coords(val[j,]), n = ik)$y
     }
     
-    return(list(val = val3, ival = val2, med = med3))
+    return(list(val = xyval, smoothed_val = smoothed_val, med = med3))
     
   })
   
@@ -62,7 +62,7 @@ shinyServer(function(input, output) {
       return(NULL)
   
     val <- netstats$val
-    ival <- netstats$ival
+    smoothed_val <- netstats$smoothed_val
     med <- netstats$med
 
     par(mar = c(2,2,2,2))
@@ -70,7 +70,7 @@ shinyServer(function(input, output) {
     grid()
     plot((val[3,] + val[4,])/2, type="p", pch=18, ylim = c(-10,2))
     
-    fan(ival, data.type = "values", start = start(ival), 
+    fan(smoothed_val, data.type = "values", start = start(smoothed_val), 
         type = "interval",
         probs = c(0.70, 0.85, 0.975),
         fan.col = colorRampPalette(c("tomato", "gray90")), alpha = 0.5,

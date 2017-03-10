@@ -6,25 +6,31 @@ shinyUI(pageWithSidebar(
   headerPanel("Data series with uncertainty"),
   # Sidebar with a slider input for number of observations
   sidebarPanel(
-    
-    fileInput("file1", "Choose CSV file to upload",
-              accept = c(
-                "text/csv",
-                "text/comma-separated-values,text/plain",
-                ".csv")
+    inputPanel(
+      fileInput("file1", "Choose CSV file to upload",
+                accept = c(
+                  "text/csv",
+                  "text/comma-separated-values,text/plain",
+                  ".csv")
+      ),
+      
+      checkboxInput("header", "File contains headers in first row", TRUE)
     ),
-    
-    checkboxInput("header", "File contains headers in first row", TRUE)
+    inputPanel(
+      selectInput("x", "Column containing time:", c("x","mode","sd"), "x"),
+      selectInput("mode", "Column containing values:", c("x","mode","sd"), "mode"),
+      selectInput("sd", "Column containing standard deviation:", c("x","mode","sd"), "sd")
+    )
 
   ),
   # Show a plot of the generated distribution
   mainPanel(
-    tabsetPanel(
-      tabPanel("Plot", 
-               plotOutput("plot")),
-      # tabPanel("output", verbatimTextOutput("value")),
+    tabsetPanel(id = "tabs",
       tabPanel("Data", 
-               dataTableOutput("df"))
+               dataTableOutput("df")),
+      tabPanel("Plot", 
+               plotOutput("plot"))
+      # tabPanel("output", verbatimTextOutput("value")),
     )
   )
 ))

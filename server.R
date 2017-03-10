@@ -5,20 +5,38 @@ library(fanplot)
 
 # smooth_frame <- function(df) {
 #   df1 <- data.frame(x = approx)
-#   
+# 
 #   ###
 #   smoothed_val <- matrix(NA, nrow = bands, ncol = smoothed_k)
 #   xyval <- matrix(NA, nrow = bands, ncol = k)
 #   med3 <- spline(xy.coords(med), n = smoothed_k)$y
-#   
+# 
 #   for (j in 1:bands) {
 #     xyval[j,] <- xy.coords(val[j,])$y
 #     smoothed_val[j,] <- spline(xy.coords(val[j,]), n = smoothed_k)$y
 #   }
-#   
+# 
 #   return(list(original_val = xyval, smoothed_val = smoothed_val, med = med3))
-#   
+# 
 # }
+use_field_m_as_n <- function(df, m, n) {
+  rdf <- df
+  if (m != n) {
+    rdf[[n]] <- df[[m]]
+    rdf[[m]] <- NULL
+  }
+  return(rdf)
+}
+
+extract_nominated <- function(df, nominated) {
+  # Extract nominated fields t make a new data.frame for further processing
+  rdf <- df
+  for (name in names(df)) {
+    if (!(name %in% nominated))
+      rdf[[name]] <- NULL
+  }
+  return(rdf)
+}
 
 expand <- function(df, percentiles) {
   k <- nrow(df)
@@ -71,15 +89,24 @@ smooth_and_expand <- function(df, smoothing, percentiles) {
   return(list(original_val = xyval, smoothed_val = smoothed_val, med = med3))
 }
 
-shinyServer(function(input, output) {
-  
+shinyServer(function(input, output, session) {
 
   output$df <- renderDataTable({
     inFile <- input$file1
     if (is.null(inFile))
       return(NULL)
     
-    read.csv(inFile$datapath, header = input$header)
+    df1 <- read.csv(inFile$datapath, header = input$header)
+    
+    # Can also set the label and select items
+    for (n in c("x","mode","sd")) {
+      updateSelectInput(session, n,
+                        choices = names(df1),
+                        selected = character(0)
+      )
+    }
+    # first parameter to renderDataTable is df1
+    df1
   }, options = list(filter = FALSE, searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE))
   
   output$plot <- renderPlot({
@@ -89,7 +116,7 @@ shinyServer(function(input, output) {
       return(NULL)
     
     df1 <- read.csv(inFile$datapath, header = input$header)
-    
+
     # smooth data frame values and parameters
     # expand uncertainties
     smoothing <- 2

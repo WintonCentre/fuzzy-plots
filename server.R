@@ -7,6 +7,8 @@ bands <- length(percentiles)
 smoothing <- 10
 smooth <- function(k) { smoothing*(k - 1) + 1 }
 
+
+
 shinyServer(function(input, output) {
   
   netstats <- reactive({
@@ -62,8 +64,7 @@ shinyServer(function(input, output) {
     val <- netstats$val
     ival <- netstats$ival
     med <- netstats$med
-    print(netstats)
-    
+
     par(mar = c(2,2,2,2))
 
     grid()
@@ -75,7 +76,7 @@ shinyServer(function(input, output) {
         fan.col = colorRampPalette(c("tomato", "gray90")), alpha = 0.5,
         frequency = smoothing)
 
-    #lines(ts(med, start = start(med), frequency = smoothing), col = "black")
+    lines(ts(med, start = start(med), frequency = smoothing), col = "black")
 
   })
 

@@ -3,6 +3,23 @@ library(fanplot)
 
 
 
+# smooth_frame <- function(df) {
+#   df1 <- data.frame(x = approx)
+#   
+#   ###
+#   smoothed_val <- matrix(NA, nrow = bands, ncol = smoothed_k)
+#   xyval <- matrix(NA, nrow = bands, ncol = k)
+#   med3 <- spline(xy.coords(med), n = smoothed_k)$y
+#   
+#   for (j in 1:bands) {
+#     xyval[j,] <- xy.coords(val[j,])$y
+#     smoothed_val[j,] <- spline(xy.coords(val[j,]), n = smoothed_k)$y
+#   }
+#   
+#   return(list(original_val = xyval, smoothed_val = smoothed_val, med = med3))
+#   
+# }
+
 expand <- function(df, percentiles) {
   k <- nrow(df)
   bands <- length(percentiles)
@@ -10,7 +27,7 @@ expand <- function(df, percentiles) {
   val <- matrix(NA, nrow = bands, ncol = k)
   med <- rep(NA, k)
   for (i in 1:k) {
-    val[, i] <- qsplitnorm(p = percentiles, 
+    val[, i] <- qsplitnorm(p = percentiles,
                            mode = df$mode[i],
                            sd = df$sd[i],
                            skew = df$skew[i])
@@ -19,7 +36,7 @@ expand <- function(df, percentiles) {
                          sd = df$sd[i],
                          skew = df$skew[i])
   }
-  
+  return(list(expanded_val = val, expanded_med = med))
 }
 
 smooth_and_expand <- function(df, smoothing, percentiles) {

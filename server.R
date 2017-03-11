@@ -6,8 +6,8 @@ smooth_df <- function(df, frequency) {
   k <- nrow(df)
   smoothed_k <- frequency*(k - 1) + 1
   return(data.frame(x = spline(df$x, n=smoothed_k)$y,
-                    mode = spline(df$mode,n=smoothed_k)$y,
-                    sd = spline(df$mode, n=smoothed_k)$y))
+                    mode = spline(df$mode, n=smoothed_k)$y,
+                    sd = spline(df$sd, n=smoothed_k)$y))
 }
 
 expand_df <- function(df, percentiles) {
@@ -16,10 +16,16 @@ expand_df <- function(df, percentiles) {
   
   val <- matrix(NA, nrow = bands, ncol = k)
   for (i in 1:k) {
+    # error here:
+    # Warning: Error in <-: NAs are not allowed in subscripted assignments
+    # Stack trace (innermost first):
+    # 79: qsplitnorm
+    # 78: expand_df [/Users/gmp26/rstudio/fuzzy-plots/server.R#19]
+    # 77: smooth_and_expand2 [/Users/gmp26/rstudio/fuzzy-plots/server.R#62]
     val[, i] <- qsplitnorm(p = percentiles,
                            mode = df$mode[i],
                            sd = df$sd[i],
-                           skew = df$skew[i])
+                           skew = 0)
   }
   return(val)
 }
@@ -33,7 +39,7 @@ expand_med <- function(df, percentiles) {
     med[i] <- qsplitnorm(p = 0.5,
                          mode = df$mode[i],
                          sd = df$sd[i],
-                         skew = df$skew[i])
+                         skew = 0)
   }
   return(med)
 }
@@ -48,46 +54,55 @@ expand <- function(df, percentiles) {
     val[, i] <- qsplitnorm(p = percentiles,
                            mode = df$mode[i],
                            sd = df$sd[i],
-                           skew = df$skew[i])
-    med[i] <- qsplitnorm(p = 0.5,
-                         mode = df$mode[i],
-                         sd = df$sd[i],
-                         skew = df$skew[i])
-  }
-  return(list(expanded_val = val, expanded_med = med))
-}
-
-smooth_and_expand <- function(df, smoothing, percentiles) {
-  
-  k <- nrow(df)
-  smoothed_k <- smoothing*(k - 1) + 1
-    
-  bands <- length(percentiles)
-  
-  val <- matrix(NA, nrow = bands, ncol = k)
-  med <- rep(NA, k)
-  for (i in 1:k) {
-    val[, i] <- qsplitnorm(p = percentiles, 
-                           mode = df$mode[i],
-                           sd = df$sd[i],
                            skew = 0)
     med[i] <- qsplitnorm(p = 0.5,
                          mode = df$mode[i],
                          sd = df$sd[i],
                          skew = 0)
   }
-  
-  smoothed_val <- matrix(NA, nrow = bands, ncol = smoothed_k)
-  xyval <- matrix(NA, nrow = bands, ncol = k)
-  med3 <- spline(xy.coords(med), n = smoothed_k)$y
-  
-  for (j in 1:bands) {
-    xyval[j,] <- xy.coords(val[j,])$y
-    smoothed_val[j,] <- spline(xy.coords(val[j,]), n = smoothed_k)$y
-  }
-  
-  return(list(original_val = val, smoothed_val = smoothed_val, med = med3))
+  return(list(expanded_val = val, expanded_med = med))
 }
+
+smooth_and_expand2 <- function(df, smoothing, percentiles) {
+  sdf <- smooth_df(df, smoothing)
+  print(df)
+  print(sdf)
+  esdf <- expand_df(sdf, percentiles)
+  med <- expand_med(sdf, percentiles)
+  original_val <- expand_df(df, percentiles)
+  return(list(original_val = original_val, smoothed_val = esdf, med = med))
+}
+
+# smooth_and_expand <- function(df, smoothing, percentiles) {
+#   
+#   k <- nrow(df)
+#   smoothed_k <- smoothing*(k - 1) + 1
+#     
+#   bands <- length(percentiles)
+#   
+#   val <- matrix(NA, nrow = bands, ncol = k)
+#   med <- rep(NA, k)
+#   for (i in 1:k) {
+#     val[, i] <- qsplitnorm(p = percentiles, 
+#                            mode = df$mode[i],
+#                            sd = df$sd[i],
+#                            skew = 0)
+#     med[i] <- qsplitnorm(p = 0.5,
+#                          mode = df$mode[i],
+#                          sd = df$sd[i],
+#                          skew = 0)
+#   }
+#   
+#   smoothed_val <- matrix(NA, nrow = bands, ncol = smoothed_k)
+#   xyval <- matrix(NA, nrow = bands, ncol = k)
+#   med3 <- spline(xy.coords(med), n = smoothed_k)$y
+#   
+#   for (j in 1:bands) {
+#     smoothed_val[j,] <- spline(xy.coords(val[j,]), n = smoothed_k)$y
+#   }
+#   
+#   return(list(original_val = val, smoothed_val = smoothed_val, med = med3))
+# }
 
 shinyServer(function(input, output, session) {
 
@@ -139,8 +154,8 @@ shinyServer(function(input, output, session) {
     
     # smooth data frame values and parameters
     # expand uncertainties
-    smoothing <- 2
-    smoothed_expanded <- smooth_and_expand(df = df1, smoothing = smoothing,
+    smoothing <- 3
+    smoothed_expanded <- smooth_and_expand2(df = df1, smoothing = smoothing,
                                   percentiles = c(0.025, 0.15, 0.30, 0.70, 0.85, 0.975))
     
     original_val <- smoothed_expanded$original_val

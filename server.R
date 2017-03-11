@@ -116,19 +116,21 @@ shinyServer(function(input, output, session) {
     # Update dropdowns in UI with column names read from csv file
     internal_names <- c("x","mode","sd")
     for (i in 1:length(internal_names)) {
-      updateSelectInput(session, internal_names[i],
-                        choices = names(df1),
-                        selected = internal_names[i]
-      )
+      previous_choice = input[[internal_names[i]]]
+      if(previous_choice == "" || !(previous_choice %in% names(df1))) {
+        updateSelectInput(session, internal_names[i],
+                          choices = names(df1),
+                          selected = internal_names[i])
+      }
     }
     
-    # if (input$xLabel == "") {
-    #   updateTextInput(session, "xLabel", value = names(df1)[1])
-    # }
-    # 
-    # if (input$modeLabel == "") {
-    #   updateTextInput(session, "modeLabel", value = names(df1)[2])
-    # }
+    if (input$xLabel == "" && input$x != "") {
+      updateTextInput(session, "xLabel", value = input$x)
+    }
+
+    if (input$modeLabel == "" && input$mode != "") {
+      updateTextInput(session, "modeLabel", value = input$mode)
+    }
     
     
     # first parameter to renderDataTable is df1

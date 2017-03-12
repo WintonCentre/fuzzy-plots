@@ -1,6 +1,7 @@
 library(shiny)
 library(fanplot)
-library(plyr)
+
+
 
 smooth_df <- function(df, frequency) {
   k <- nrow(df)

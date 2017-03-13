@@ -5,6 +5,8 @@ library(shinyjs)
 
 smooth_df <- function(df, frequency) {
   k <- nrow(df)
+  print("df=")
+  print(df)
   smoothed_k <- frequency*(k - 1) + 1
   return(data.frame(#x = spline(df$x, n=smoothed_k)$y,
     mode = spline(df$mode, n=smoothed_k)$y,
@@ -90,6 +92,9 @@ shinyServer(function(input, output, session) {
   
   output$df <- renderDataTable({
     df1 <- load_data()
+    if (is.null(df1))
+      return(NULL)
+    
     
     # Update dropdowns in UI with column names read from csv file
     internal_names <- c("mode","sd")
@@ -116,6 +121,26 @@ shinyServer(function(input, output, session) {
     
   
     df1 <- load_data()
+    if (is.null(df1))
+      return(NULL)
+    
+    # Update dropdowns in UI with column names read from csv file
+    internal_names <- c("mode","sd")
+    for (i in 1:length(internal_names)) {
+      previous_choice = input[[internal_names[i]]]
+      if (previous_choice == "" || !(previous_choice %in% names(df1))) {
+        updateSelectInput(session, internal_names[i],
+                          choices = names(df1),
+                          selected = internal_names[i])
+      }
+    }
+    
+    if (input$modeLabel == "" && input$mode != "") {
+      updateTextInput(session, "modeLabel", value = input$mode)
+    }
+    
+    if (input$mode == "" || input$sd == "")
+      return(NULL)
     
     
     # redefine df1 with internal names, "x", "mode", and "sd".

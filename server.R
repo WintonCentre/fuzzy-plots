@@ -5,7 +5,7 @@ library(fanplot)
 smooth_df <- function(df, frequency) {
   k <- nrow(df)
   smoothed_k <- frequency*(k - 1) + 1
-  return(data.frame(x = spline(df$x, n=smoothed_k)$y,
+  return(data.frame(#x = spline(df$x, n=smoothed_k)$y,
                     mode = spline(df$mode, n=smoothed_k)$y,
                     sd = spline(df$sd, n=smoothed_k)$y))
 }
@@ -59,8 +59,6 @@ expand <- function(df, percentiles) {
 
 smooth_and_expand2 <- function(df, smoothing, percentiles) {
   sdf <- smooth_df(df, smoothing)
-  print(df)
-  print(sdf)
   esdf <- expand_df(sdf, percentiles)
   med <- expand_med(sdf, percentiles)
   original_val <- expand_df(df, percentiles)
@@ -78,7 +76,7 @@ shinyServer(function(input, output, session) {
     df1 <- read.csv(inFile$datapath, header = input$header)
     
     # Update dropdowns in UI with column names read from csv file
-    internal_names <- c("x","mode","sd")
+    internal_names <- c("mode","sd")
     for (i in 1:length(internal_names)) {
       previous_choice = input[[internal_names[i]]]
       if(previous_choice == "" || !(previous_choice %in% names(df1))) {
@@ -86,10 +84,6 @@ shinyServer(function(input, output, session) {
                           choices = names(df1),
                           selected = internal_names[i])
       }
-    }
-    
-    if (input$xLabel == "" && input$x != "") {
-      updateTextInput(session, "xLabel", value = input$x)
     }
 
     if (input$modeLabel == "" && input$mode != "") {
@@ -111,11 +105,11 @@ shinyServer(function(input, output, session) {
     
     
     # redefine df1 with internal names, "x", "mode", and "sd".
-    if(input$x != "" && input$mode != "" && input$sd != "") {
-      x <- df1[[input$x]]
+    if (input$mode != "" && input$sd != "") {
+#      x <- df1[[input$x]]
       mode <- df1[[input$mode]]
       sd <- df1[[input$sd]]
-      df1 <- data.frame(x = x, mode = mode, sd = sd)
+      df1 <- data.frame(mode = mode, sd = sd)
     }  
     
     # smooth data frame values and parameters
@@ -137,7 +131,7 @@ shinyServer(function(input, output, session) {
          ylab = input$modeLabel,
          main = input$mainTitle
         )
-    axis(1, at=time(1), labels=TRUE)
+    axis(1, at=time(1:ncol?(original_val)), labels = TRUE)
     
     if (input$expand) {
         fan(smoothed_val, data.type = "values", start = start(smoothed_val), 

@@ -21,12 +21,12 @@ shinyUI(pageWithSidebar(
     ),
     
     inputPanel(
-      selectInput("x", "Independent variable:", c(), "x"),
-      textInput("xLabel", "Axis label")
+    #   selectInput("x", "Independent variable:", c(), "x"),
+       textInput("xLabel", "X Axis label")
     ),
     inputPanel(
-      selectInput("mode", "Dependent variable:", c(), "mode"),
-      textInput("modeLabel", "Axis label")
+      textInput("modeLabel", "Y Axis label"),
+      selectInput("mode", "Dependent variable:", c(), "mode")
     ),
     inputPanel(
       selectInput("sd", "Standard deviation:", c(), "sd")

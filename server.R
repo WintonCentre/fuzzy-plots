@@ -2,7 +2,6 @@ library(shiny)
 library(fanplot)
 
 
-
 smooth_df <- function(df, frequency) {
   k <- nrow(df)
   smoothed_k <- frequency*(k - 1) + 1
@@ -17,12 +16,6 @@ expand_df <- function(df, percentiles) {
   
   val <- matrix(NA, nrow = bands, ncol = k)
   for (i in 1:k) {
-    # error here:
-    # Warning: Error in <-: NAs are not allowed in subscripted assignments
-    # Stack trace (innermost first):
-    # 79: qsplitnorm
-    # 78: expand_df [/Users/gmp26/rstudio/fuzzy-plots/server.R#19]
-    # 77: smooth_and_expand2 [/Users/gmp26/rstudio/fuzzy-plots/server.R#62]
     val[, i] <- qsplitnorm(p = percentiles,
                            mode = df$mode[i],
                            sd = df$sd[i],
@@ -74,36 +67,6 @@ smooth_and_expand2 <- function(df, smoothing, percentiles) {
   return(list(original_val = original_val, smoothed_val = esdf, med = med))
 }
 
-# smooth_and_expand <- function(df, smoothing, percentiles) {
-#   
-#   k <- nrow(df)
-#   smoothed_k <- smoothing*(k - 1) + 1
-#     
-#   bands <- length(percentiles)
-#   
-#   val <- matrix(NA, nrow = bands, ncol = k)
-#   med <- rep(NA, k)
-#   for (i in 1:k) {
-#     val[, i] <- qsplitnorm(p = percentiles, 
-#                            mode = df$mode[i],
-#                            sd = df$sd[i],
-#                            skew = 0)
-#     med[i] <- qsplitnorm(p = 0.5,
-#                          mode = df$mode[i],
-#                          sd = df$sd[i],
-#                          skew = 0)
-#   }
-#   
-#   smoothed_val <- matrix(NA, nrow = bands, ncol = smoothed_k)
-#   xyval <- matrix(NA, nrow = bands, ncol = k)
-#   med3 <- spline(xy.coords(med), n = smoothed_k)$y
-#   
-#   for (j in 1:bands) {
-#     smoothed_val[j,] <- spline(xy.coords(val[j,]), n = smoothed_k)$y
-#   }
-#   
-#   return(list(original_val = val, smoothed_val = smoothed_val, med = med3))
-# }
 
 shinyServer(function(input, output, session) {
 
@@ -157,7 +120,7 @@ shinyServer(function(input, output, session) {
     
     # smooth data frame values and parameters
     # expand uncertainties
-    smoothing <- 3
+    smoothing <- 20
     smoothed_expanded <- smooth_and_expand2(df = df1, smoothing = smoothing,
                                   percentiles = c(0.025, 0.15, 0.30, 0.70, 0.85, 0.975))
     
@@ -174,6 +137,7 @@ shinyServer(function(input, output, session) {
          ylab = input$modeLabel,
          main = input$mainTitle
         )
+    axis(1, at=time(1), labels=TRUE)
     
     if (input$expand) {
         fan(smoothed_val, data.type = "values", start = start(smoothed_val), 

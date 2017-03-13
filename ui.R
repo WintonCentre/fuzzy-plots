@@ -1,12 +1,18 @@
 library(shiny)
+library(shinyjs)
 
 # Define UI for application that plots random distributions
 shinyUI(pageWithSidebar(
+  
   # Application title
   headerPanel("Data series with uncertainty"),
   # Sidebar with a slider input for number of observations
   sidebarPanel(
     inputPanel(
+      shinyjs::useShinyjs(),
+      
+      checkboxInput("use_sample_data", "Use sample data", TRUE),
+      
       fileInput("file1", "Choose CSV file to upload",
                 accept = c(
                   "text/csv",

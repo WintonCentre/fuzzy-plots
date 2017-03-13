@@ -1,5 +1,6 @@
 library(shiny)
 library(fanplot)
+library(shinyjs)
 
 
 smooth_df <- function(df, frequency) {
@@ -57,7 +58,7 @@ expand <- function(df, percentiles) {
   return(list(expanded_val = val, expanded_med = med))
 }
 
-smooth_and_expand2 <- function(df, smoothing, percentiles) {
+smooth_and_expand <- function(df, smoothing, percentiles) {
   sdf <- smooth_df(df, smoothing)
   esdf <- expand_df(sdf, percentiles)
   med <- expand_med(sdf, percentiles)
@@ -65,20 +66,36 @@ smooth_and_expand2 <- function(df, smoothing, percentiles) {
   return(list(original_val = original_val, smoothed_val = esdf, med = med))
 }
 
+
+
+
 shinyServer(function(input, output, session) {
   
+  load_data <- reactive({
+    if (input$use_sample_data) {
+      shinyjs::hide(id = "file1", anim = TRUE, animType = "slide", time = 0.33)
+      shinyjs::hideElement(id = "header", anim = TRUE, animType = "slide", time = 0.33)
+      return(readRDS("data/sample.rds"))
+    }
+    else {
+      shinyjs::show(id = "file1", anim = TRUE, animType = "slide", time = 0.33)
+      shinyjs::show(id = "header", anim = TRUE, animType = "slide", time = 0.33)
+      inFile <- input$file1
+      if (is.null(inFile))
+        return(NULL)
+      
+      return(read.csv(inFile$datapath, header = input$header))
+    }
+  })
+  
   output$df <- renderDataTable({
-    inFile <- input$file1
-    if (is.null(inFile))
-      return(NULL)
-    
-    df1 <- read.csv(inFile$datapath, header = input$header)
+    df1 <- load_data()
     
     # Update dropdowns in UI with column names read from csv file
     internal_names <- c("mode","sd")
     for (i in 1:length(internal_names)) {
       previous_choice = input[[internal_names[i]]]
-      if(previous_choice == "" || !(previous_choice %in% names(df1))) {
+      if (previous_choice == "" || !(previous_choice %in% names(df1))) {
         updateSelectInput(session, internal_names[i],
                           choices = names(df1),
                           selected = internal_names[i])
@@ -97,11 +114,8 @@ shinyServer(function(input, output, session) {
   
   output$plot <- renderPlot({
     
-    inFile <- input$file1
-    if (is.null(inFile))
-      return(NULL)
-    
-    df1 <- read.csv(inFile$datapath, header = input$header)
+  
+    df1 <- load_data()
     
     
     # redefine df1 with internal names, "x", "mode", and "sd".
@@ -115,24 +129,24 @@ shinyServer(function(input, output, session) {
     # smooth data frame values and parameters
     # expand uncertainties
     smoothing <- 20
-    smoothed_expanded <- smooth_and_expand2(df = df1, smoothing = smoothing,
+    smoothed_expanded <- smooth_and_expand(df = df1, smoothing = smoothing,
                                             percentiles = c(0.025, 0.15, 0.30, 0.70, 0.85, 0.975))
+    
+    sv <- smoothed_expanded$smoothed_val
+    min_smoothed <- floor(min(sv[1, ]))
+    max_smoothed <- ceiling(max(sv[nrow(sv),1]))
     
     original_val <- smoothed_expanded$original_val
     smoothed_val <- smoothed_expanded$smoothed_val
-    med <- smoothed_expanded$med                                                                                                                                                                                                 
-    
-    par(mar = c(4,4,4,4))                                                                                                                                                                                                        
-    
+    med <- smoothed_expanded$med
+    par(mar = c(4,4,4,4))    
     grid()                                                                                                                                                                                                                       
-    plot((original_val[3,] + original_val[4,])/2,                                                                                                                                                                                
-         type = "p", pch = 18,                                                                                                                                                                                                   
-         xlim = c(1,12),                                                                                                                                                                                                         
-         ylim = c(-10,2),                                                                                                                                                                                                        
-         xlab = input$xLabel,                                                                                                                                                                                                    
-         ylab = input$modeLabel,                                                                                                                                                                                                 
-         main = input$mainTitle                                                                                                                                                                                                  
-    )                                                                                                                                                                                                                        
+    plot((original_val[3,] + original_val[4,])/2,                                                                                 
+         type = "p", pch = 18,                                                                                                                  xlim = c(1,ncol(original_val) + 1),
+         ylim = c(min_smoothed, max_smoothed),
+         xlab = input$xLabel,
+         ylab = input$modeLabel,
+         main = input$mainTitle)                                                                                                                                                                                                                        
     axis(1, at=time(1:ncol(original_val)), labels = TRUE)                                                                                                                                                                        
     
     if (input$expand) {                                                                                                                                                                                                          

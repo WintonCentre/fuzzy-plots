@@ -13,14 +13,13 @@ shinyUI(pageWithSidebar(
       
       checkboxInput("use_sample_data", "Use sample data", TRUE),
       
-      fileInput("file1", "Choose CSV file to upload",
+      fileInput("file1", "Choose CSV file to upload. First row must contain headers",
                 accept = c(
                   "text/csv",
                   "text/comma-separated-values,text/plain",
                   ".csv")
       ),
-      
-      checkboxInput("header", "File contains headers in first row", TRUE),
+      #checkboxInput("header", "File contains headers in first row", TRUE),
       textInput("mainTitle", "Plot title:", "Main Title"),
       checkboxInput("expand", "Show uncertainty", FALSE)
       
@@ -28,10 +27,10 @@ shinyUI(pageWithSidebar(
     
     inputPanel(
     #   selectInput("x", "Independent variable:", c(), "x"),
-       textInput("xLabel", "X Axis label")
+       textInput("xLabel", "X Axis label:")
     ),
     inputPanel(
-      textInput("modeLabel", "Y Axis label"),
+      textInput("modeLabel", "Y Axis label:"),
       selectInput("mode", "Dependent variable:", c(), "mode")
     ),
     inputPanel(

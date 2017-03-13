@@ -76,17 +76,17 @@ shinyServer(function(input, output, session) {
   load_data <- reactive({
     if (input$use_sample_data) {
       shinyjs::hide(id = "file1", anim = TRUE, animType = "slide", time = 0.33)
-      shinyjs::hideElement(id = "header", anim = TRUE, animType = "slide", time = 0.33)
+      #shinyjs::hideElement(id = "header", anim = TRUE, animType = "slide", time = 0.33)
       return(readRDS("data/sample.rds"))
     }
     else {
       shinyjs::show(id = "file1", anim = TRUE, animType = "slide", time = 0.33)
-      shinyjs::show(id = "header", anim = TRUE, animType = "slide", time = 0.33)
+      #shinyjs::show(id = "header", anim = TRUE, animType = "slide", time = 0.33)
       inFile <- input$file1
       if (is.null(inFile))
         return(NULL)
       
-      return(read.csv(inFile$datapath, header = input$header))
+      return(read.csv(inFile$datapath, header = TRUE))
     }
   })
   

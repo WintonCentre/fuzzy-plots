@@ -1,2 +1,2 @@
 load("/Users/gmp26/R/fuzzy-plot/data/sample.rds")
-load("/Users/gmp26/R/fuzzy-plot/data/sample.rds")
+load("/Users/gmp26/rstudio/fuzzy-plots/data/sample.rds")

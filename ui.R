@@ -46,7 +46,7 @@ shinyUI(pageWithSidebar(
       tabPanel("Data", 
                dataTableOutput("df")),
       tabPanel("Plot", 
-               plotOutput("plot"))
+               plotOutput("plot", height = "600px"))
       # tabPanel("output", verbatimTextOutput("value")),
     )
   )

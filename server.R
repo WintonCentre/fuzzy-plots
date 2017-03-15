@@ -185,7 +185,7 @@ shinyServer(function(input, output, session) {
     med <- smoothed_expanded$med
     par(mar = c(4,4,4,4))    
     grid()                                                                                                                                             
-    plot((original_val[40,] + original_val[41,])/2,                                                                                 
+    plot((original_val[40,] + original_val[41,])/2,
          type = "p", pch = 18,
          xlim = c(1,ncol(original_val)),
          ylim = c(min_smoothed, max_smoothed),

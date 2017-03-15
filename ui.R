@@ -35,7 +35,9 @@ shinyUI(pageWithSidebar(
       selectInput("mode", "Dependent variable:", c(), "mode")
     ),
     inputPanel(
-      selectInput("sd", "Standard deviation:", c(), "sd")
+      selectInput("sd", "Uncertainty:", c(), "sd"),
+      numericInput("sd_unit", "Uncertainty unit (in sd)", 1, min = 0)
+      
     )
 
   ),

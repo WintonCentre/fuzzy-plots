@@ -3,75 +3,82 @@ library(fanplot)
 library(shinyjs)
 
 
-smooth_df <- function(df, frequency) {
-  k <- nrow(df)
-  print("df=")
-  print(df)
-  smoothed_k <- frequency*(k - 1) + 1
-  return(data.frame(#x = spline(df$x, n=smoothed_k)$y,
-    mode = spline(df$mode, n=smoothed_k)$y,
-    sd = spline(df$sd, n=smoothed_k)$y))
-}
-
-expand_df <- function(df, percentiles) {
-  k <- nrow(df)
-  bands <- length(percentiles)
-  
-  val <- matrix(NA, nrow = bands, ncol = k)
-  for (i in 1:k) {
-    val[, i] <- qsplitnorm(p = percentiles,
-                           mode = df$mode[i],
-                           sd = df$sd[i],
-                           skew = 0)
-  }
-  return(val)
-}
-
-expand_med <- function(df, percentiles) {
-  k <- nrow(df)
-  bands <- length(percentiles)
-  
-  med <- rep(NA, k)
-  for (i in 1:k) {
-    med[i] <- qsplitnorm(p = 0.5,
-                         mode = df$mode[i],
-                         sd = df$sd[i],
-                         skew = 0)
-  }
-  return(med)
-}
-
-expand <- function(df, percentiles) {
-  k <- nrow(df)
-  bands <- length(percentiles)
-  
-  val <- matrix(NA, nrow = bands, ncol = k)
-  med <- rep(NA, k)
-  for (i in 1:k) {
-    val[, i] <- qsplitnorm(p = percentiles,
-                           mode = df$mode[i],
-                           sd = df$sd[i],
-                           skew = 0)
-    med[i] <- qsplitnorm(p = 0.5,
-                         mode = df$mode[i],
-                         sd = df$sd[i],
-                         skew = 0)
-  }
-  return(list(expanded_val = val, expanded_med = med))
-}
-
-smooth_and_expand <- function(df, smoothing, percentiles) {
-  sdf <- smooth_df(df, smoothing)
-  esdf <- expand_df(sdf, percentiles)
-  med <- expand_med(sdf, percentiles)
-  original_val <- expand_df(df, percentiles)
-  return(list(original_val = original_val, smoothed_val = esdf, med = med))
-}
-
 
 
 
 shinyServer(function(input, output, session) {
+  
+  
+  expand_df <- function(df, percentiles) {
+    k <- nrow(df)
+    bands <- length(percentiles)
+    
+    sd_unit = 1;
+    if (input$sd_unit > 0)
+      sd_unit = input$sd_unit
+    
+    val <- matrix(NA, nrow = bands, ncol = k)
+    for (i in 1:k) {
+      val[, i] <- qsplitnorm(p = percentiles,
+                             mode = df$mode[i],
+                             sd = df$sd[i] / sd_unit,
+                             skew = 0)
+    }
+    return(val)
+  }
+  
+  expand_med <- function(df, percentiles) {
+    k <- nrow(df)
+    med <- rep(NA, k)
+    for (i in 1:k) {
+      med[i] <- qsplitnorm(p = 0.5,
+                           mode = df$mode[i],
+                           sd = 2*df$sd[i],
+                           skew = 0)
+    }
+    return(med)
+  }
+  
+  smooth_df <- function(df, frequency) {
+    k <- nrow(df)
+    
+    sd_unit = 1;
+    if (input$sd_unit > 0)
+      sd_unit = input$sd_unit
+    
+    smoothed_k <- frequency*(k - 1) + 1
+    return(data.frame(#x = spline(df$x, n=smoothed_k)$y,
+      mode = spline(df$mode, n=smoothed_k)$y,
+      sd = spline(df$sd / sd_unit, n=smoothed_k)$y))
+  }
+  
+  # expand <- function(df, percentiles) {
+  #   k <- nrow(df)
+  #   bands <- length(percentiles)
+  #   
+  #   val <- matrix(NA, nrow = bands, ncol = k)
+  #   med <- rep(NA, k)
+  #   for (i in 1:k) {
+  #     val[, i] <- qsplitnorm(p = percentiles,
+  #                            mode = df$mode[i],
+  #                            sd = 4*df$sd[i],
+  #                            skew = 0)
+  #     med[i] <- qsplitnorm(p = 0.5,
+  #                          mode = df$mode[i],
+  #                          sd = 4*df$sd[i],
+  #                          skew = 0)
+  #   }
+  #   return(list(expanded_val = val, expanded_med = med))
+  # }
+  
+  smooth_and_expand <- function(df, smoothing, percentiles) {
+    sdf <- smooth_df(df, smoothing)
+    esdf <- expand_df(sdf, percentiles)
+    med <- expand_med(sdf, percentiles)
+    original_val <- expand_df(df, percentiles)
+    return(list(original_val = original_val, smoothed_val = esdf, med = med))
+  }
+  
   
   load_data <- reactive({
     if (input$use_sample_data) {
@@ -175,15 +182,16 @@ shinyServer(function(input, output, session) {
     axis(1, at=time(1:ncol(original_val)), labels = TRUE)                                                                                                                                                                        
     
     if (input$expand) {                                                                                                                                                                                                          
-      fan(smoothed_val, data.type = "values", start = start(smoothed_val),                                                                                                                                                     
+      fan(smoothed_val, data.type = "values", start = start(smoothed_val),                                                                                                                                                   
           type = "interval",
           probs = c(0.70, 0.85, 0.975),
           fan.col = colorRampPalette(c("tomato", "gray90")), alpha = 0.5,
           frequency = smoothing)
     }
     
-    lines(ts(med, start = start(med), frequency = smoothing), col = "black")
-    
+    if(!input$expand) {
+      lines(ts(med, start = start(med), frequency = smoothing), col = "black")
+    }
   })
   
 })

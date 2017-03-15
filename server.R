@@ -14,7 +14,7 @@ shinyServer(function(input, output, session) {
     bands <- length(percentiles)
     
     sd_unit = 1;
-    if (!is.na(input$sd_unit) && !is.null(input$sd_unit) && input$sd_unit > 0)
+    if (!is.na(input$sd_unit) & !is.null(input$sd_unit) & input$sd_unit > 0)
       sd_unit = input$sd_unit
     
     val <- matrix(NA, nrow = bands, ncol = k)
@@ -32,7 +32,7 @@ shinyServer(function(input, output, session) {
     med <- rep(NA, k)
     
     sd_unit = 1;
-    if (!is.na(input$sd_unit) &&!is.null(input$sd_unit) && input$sd_unit > 0)
+    if (!is.na(input$sd_unit) &!is.null(input$sd_unit) & input$sd_unit > 0)
       sd_unit = input$sd_unit
     
     for (i in 1:k) {
@@ -48,7 +48,7 @@ shinyServer(function(input, output, session) {
     k <- nrow(df)
     
     sd_unit = 1;
-    if (!is.na(input$sd_unit) && !is.null(input$sd_unit) && input$sd_unit > 0)
+    if (!is.na(input$sd_unit) & !is.null(input$sd_unit) & input$sd_unit > 0)
       sd_unit = input$sd_unit
     
     smoothed_k <- frequency*(k - 1) + 1
@@ -119,7 +119,7 @@ shinyServer(function(input, output, session) {
       }
     }
     
-    if (input$modeLabel == "" && input$mode != "") {
+    if (input$modeLabel == "" & input$mode != "") {
       updateTextInput(session, "modeLabel", value = input$mode)
     }
     
@@ -147,7 +147,7 @@ shinyServer(function(input, output, session) {
       }
     }
     
-    if (input$modeLabel == "" && input$mode != "") {
+    if (input$modeLabel == "" & input$mode != "") {
       updateTextInput(session, "modeLabel", value = input$mode)
     }
     
@@ -156,7 +156,7 @@ shinyServer(function(input, output, session) {
     
     
     # redefine df1 with internal names, "x", "mode", and "sd".
-    if (input$mode != "" && input$sd != "") {
+    if (input$mode != "" & input$sd != "") {
       #      x <- df1[[input$x]]
       mode <- df1[[input$mode]]
       sd <- df1[[input$sd]]
@@ -165,33 +165,52 @@ shinyServer(function(input, output, session) {
     
     # smooth data frame values and parameters
     # expand uncertainties
-    smoothing <- 20
+    smoothing <- 10
+    pps =  psplitnorm(seq(-4,4,0.1))
+    
     smoothed_expanded <- smooth_and_expand(df = df1, smoothing = smoothing,
-                                            percentiles = c(0.025, 0.15, 0.30, 0.70, 0.85, 0.975))
+                                            percentiles = pps
+                                             #c(0.025, 0.15, 0.30, 0.70, 0.85, 0.975)
+                                             )
     
     sv <- smoothed_expanded$smoothed_val
-    min_smoothed <- floor(min(sv[1, ]))
-    max_smoothed <- ceiling(max(sv[nrow(sv),1]))
+    min_smoothed <- floor(min(sv))
+    max_smoothed <- ceiling(max(sv))
+    print(min_smoothed)
+    print(max_smoothed)
     
     original_val <- smoothed_expanded$original_val
     smoothed_val <- smoothed_expanded$smoothed_val
+    
     med <- smoothed_expanded$med
     par(mar = c(4,4,4,4))    
-    grid()                                                                                                                                                                                                                       
-    plot((original_val[3,] + original_val[4,])/2,                                                                                 
-         type = "p", pch = 18,                                                                                                                  xlim = c(1,ncol(original_val) + 1),
+    grid()                                                                                                                                             
+    plot((original_val[40,] + original_val[41,])/2,                                                                                 
+         type = "p", pch = 18,
+         xlim = c(1,ncol(original_val)),
          ylim = c(min_smoothed, max_smoothed),
          xlab = input$xLabel,
          ylab = input$modeLabel,
          main = input$mainTitle)                                                                                                                                                                                                                        
     axis(1, at=time(1:ncol(original_val)), labels = TRUE)                                                                                                                                                                        
     
-    if (input$expand) {                                                                                                                                                                                                          
-      fan(smoothed_val, data.type = "values", start = start(smoothed_val),                                                                                                                                                   
-          type = "interval",
-          probs = c(0.70, 0.85, 0.975),
-          fan.col = colorRampPalette(c("tomato", "gray90")), alpha = 0.5,
-          frequency = smoothing)
+    if (input$expand) {
+      print(nrow(smoothed_val))
+      print(length(pps))
+      fan0(ts(smoothed_val, start = 1, frequency = smoothing), 
+           data.type = "values", 
+           start = 1, 
+           xlim = c(1,ncol(original_val)),
+           ylim = c(min_smoothed, max_smoothed),
+           #type = "interval",
+           type = "percentile",
+           med.ln = FALSE,
+           medlab = NULL,
+           style = "fan",
+           probs = pps,
+           #c(0.70, 0.85, 0.975),
+           fan.col = colorRampPalette(c("tomato", "gray100")), alpha = 0.5
+           )
     }
     
     if(!input$expand) {

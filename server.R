@@ -14,14 +14,14 @@ shinyServer(function(input, output, session) {
     bands <- length(percentiles)
     
     sd_unit = 1;
-    if (input$sd_unit > 0)
+    if (!is.na(input$sd_unit) && !is.null(input$sd_unit) && input$sd_unit > 0)
       sd_unit = input$sd_unit
     
     val <- matrix(NA, nrow = bands, ncol = k)
     for (i in 1:k) {
       val[, i] <- qsplitnorm(p = percentiles,
                              mode = df$mode[i],
-                             sd = df$sd[i] / sd_unit,
+                             sd = df$sd[i] * sd_unit,
                              skew = 0)
     }
     return(val)
@@ -30,10 +30,15 @@ shinyServer(function(input, output, session) {
   expand_med <- function(df, percentiles) {
     k <- nrow(df)
     med <- rep(NA, k)
+    
+    sd_unit = 1;
+    if (!is.na(input$sd_unit) &&!is.null(input$sd_unit) && input$sd_unit > 0)
+      sd_unit = input$sd_unit
+    
     for (i in 1:k) {
       med[i] <- qsplitnorm(p = 0.5,
                            mode = df$mode[i],
-                           sd = 2*df$sd[i],
+                           sd = df$sd[i] * sd_unit,
                            skew = 0)
     }
     return(med)
@@ -43,13 +48,13 @@ shinyServer(function(input, output, session) {
     k <- nrow(df)
     
     sd_unit = 1;
-    if (input$sd_unit > 0)
+    if (!is.na(input$sd_unit) && !is.null(input$sd_unit) && input$sd_unit > 0)
       sd_unit = input$sd_unit
     
     smoothed_k <- frequency*(k - 1) + 1
     return(data.frame(#x = spline(df$x, n=smoothed_k)$y,
       mode = spline(df$mode, n=smoothed_k)$y,
-      sd = spline(df$sd / sd_unit, n=smoothed_k)$y))
+      sd = spline(df$sd * sd_unit, n=smoothed_k)$y))
   }
   
   # expand <- function(df, percentiles) {

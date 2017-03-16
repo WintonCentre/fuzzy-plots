@@ -166,8 +166,12 @@ shinyServer(function(input, output, session) {
     # smooth data frame values and parameters
     # expand uncertainties
     smoothing <- 10
-    pps =  psplitnorm(seq(-4,4,0.1))
-    
+    pps =  psplitnorm(c(seq(-3,-2, 0.5), 
+                        seq(-1.98,-1, 0.02), 
+                        seq(-0.99,0.99,0.01), 
+                        seq(1, 1.98, 0.02), 
+                        seq(2, 3, 0.5)))
+
     smoothed_expanded <- smooth_and_expand(df = df1, smoothing = smoothing,
                                             percentiles = pps
                                              #c(0.025, 0.15, 0.30, 0.70, 0.85, 0.975)
@@ -185,7 +189,7 @@ shinyServer(function(input, output, session) {
     med <- smoothed_expanded$med
     par(mar = c(4,4,4,4))    
     grid()                                                                                                                                             
-    plot((original_val[40,] + original_val[41,])/2,
+    plot((original_val[150,] + original_val[151,])/2,
          type = "p", pch = 18,
          xlim = c(1,ncol(original_val)),
          ylim = c(min_smoothed, max_smoothed),
@@ -209,7 +213,7 @@ shinyServer(function(input, output, session) {
            style = "fan",
            probs = pps,
            #c(0.70, 0.85, 0.975),
-           fan.col = colorRampPalette(c("tomato", "gray100")), alpha = 0.5
+           fan.col = colorRampPalette(c("tomato", "white"))
            )
     }
     

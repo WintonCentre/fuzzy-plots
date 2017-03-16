@@ -112,6 +112,7 @@ shinyServer(function(input, output, session) {
     internal_names <- c("mode","sd")
     for (i in 1:length(internal_names)) {
       previous_choice = input[[internal_names[i]]]
+      print(previous_choice)
       if (previous_choice == "" || !(previous_choice %in% names(df1))) {
         updateSelectInput(session, internal_names[i],
                           choices = names(df1),

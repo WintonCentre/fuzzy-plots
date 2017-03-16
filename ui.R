@@ -20,18 +20,18 @@ shinyUI(pageWithSidebar(
                   ".csv")
       ),
       #checkboxInput("header", "File contains headers in first row", TRUE),
-      textInput("mainTitle", "Plot title:", "Main Title"),
+      textInput("mainTitle", "Plot title:", "Time Series"),
       checkboxInput("expand", "Show uncertainty", FALSE)
       
     ),
     
     inputPanel(
     #   selectInput("x", "Independent variable:", c(), "x"),
-       textInput("xLabel", "X Axis label:")
+       textInput("xLabel", "X Axis label:", "time")
     ),
     inputPanel(
-      textInput("Label", "Y Axis label:"),
-      selectInput("", "Dependent variable:", c(), "")
+      textInput("modeLabel", "Y Axis label:", "values"),
+      selectInput("mode", "Dependent variable:", c("values"), "values")
     ),
     inputPanel(
       selectInput("sd", "Uncertainty:", c(), "sd"),

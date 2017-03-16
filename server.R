@@ -2,9 +2,16 @@ library(shiny)
 library(fanplot)
 library(shinyjs)
 
+# I forgot that it would be great if 
+# the default plot was just the dots
+# then clicking 'smooth' joined them up
+# then clicking 'uncertainty bands' put confidence bands
+# then clicking 'uncertainty blur' put the sausage on
+# Cool!
 
-
-
+# In a02samar2017.xls, 
+#   check column E 2013 to present \pm 73,000
+#   column I \pm 0.1
 
 shinyServer(function(input, output, session) {
   

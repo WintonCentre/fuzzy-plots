@@ -30,8 +30,8 @@ shinyUI(pageWithSidebar(
        textInput("xLabel", "X Axis label:")
     ),
     inputPanel(
-      textInput("modeLabel", "Y Axis label:"),
-      selectInput("mode", "Dependent variable:", c(), "mode")
+      textInput("Label", "Y Axis label:"),
+      selectInput("", "Dependent variable:", c(), "")
     ),
     inputPanel(
       selectInput("sd", "Uncertainty:", c(), "sd"),

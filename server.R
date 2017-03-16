@@ -199,21 +199,22 @@ shinyServer(function(input, output, session) {
     axis(1, at=time(1:ncol(original_val)), labels = TRUE)                                                                                                                                                                        
     
     if (input$expand) {
-      print(nrow(smoothed_val))
-      print(length(pps))
-      fan0(ts(smoothed_val, start = 1, frequency = smoothing), 
+      fan0(smoothed_val,
            data.type = "values", 
-           start = 1, 
+           start = 1,
+           frequency = smoothing,
            xlim = c(1,ncol(original_val)),
            ylim = c(min_smoothed, max_smoothed),
            #type = "interval",
            type = "percentile",
-           med.ln = FALSE,
+           med.ln = TRUE,
            medlab = NULL,
            style = "fan",
            probs = pps,
-           #c(0.70, 0.85, 0.975),
-           fan.col = colorRampPalette(c("tomato", "white"))
+           fan.col = colorRampPalette(c("tomato", "white")),
+           xlab = input$xLabel,
+           ylab = input$modeLabel,
+           main = input$mainTitle
            )
     }
     

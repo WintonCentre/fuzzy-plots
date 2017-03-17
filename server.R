@@ -1,5 +1,5 @@
 library(shiny)
-#library(fanplot)
+library(fanplot)
 library(shinyjs)
 
 fan <- function (data = NULL, data.type = "simulations", style = "fan", 
@@ -324,7 +324,7 @@ fan0 <- function (data = NULL, data.type = "simulations", style = "fan",
 #   )
 # }
 
-norm.density.palette <- function(sds = 4, colmax = "tomato", colmin = "transparent", gamma = 1, scale = 1) {
+norm.density.palette <- function(sds = 4, colmax = "tomato", colmin = "white", gamma = 1, scale = 1) {
   rgbmax <- col2rgb(colmax, alpha=TRUE)
   rgbmin <- c(col2rgb(colmin, alpha = FALSE), 0)
   if (gamma <= 0) 
@@ -333,7 +333,7 @@ norm.density.palette <- function(sds = 4, colmax = "tomato", colmin = "transpare
     function(n) {
 
       pal <- seq(n)
-      x <- seq(-sds, sds, length=n)
+      x <- seq(0, sds, length=n)
       dens <- dnorm(x)
       dens <- dens/max(dens) * scale
       
@@ -343,15 +343,11 @@ norm.density.palette <- function(sds = 4, colmax = "tomato", colmin = "transpare
       #             p * rgbmax[3] + (1 - p) * rgbmin[3], 
       #             alpha = p * rgbmax[4] + (1 - p) * rgbmin[4], 
       #             maxColorValue = 255)
+      # return(cols)
       # 
-      # rgbmax <- col2rgb(colmax, alpha = TRUE)
-      # rgbmin <- if (colmin == "transparent") 
-      #   c(col2rgb(colmax, alpha = FALSE), 0)
-      # else col2rgb(colmin, alpha = TRUE)
-      
       if (gamma <= 0) 
         stop("gamma must be greater than 0")
-      p <- dens[1:(n - 1)]^gamma
+      p <- dens[1:n]^gamma
       if (colmin == "transparent") 
         cols <- rgb(p * rgbmax[1] + (1 - p) * rgbmin[1], 
                     p * rgbmax[2] + (1 - p) * rgbmin[2], 
@@ -362,7 +358,6 @@ norm.density.palette <- function(sds = 4, colmax = "tomato", colmin = "transpare
                        p * rgbmax[2] + (1 - p) * rgbmin[2], 
                        p * rgbmax[3] + (1 - p) * rgbmin[3], 
                        alpha = rgbmax[4], maxColorValue = 255)
-      
       return(cols)
     }
   )
@@ -373,9 +368,8 @@ get_percentiles <- function(n = 10, sds = 4, scale = 1) {
   if (n %% 2 != 0) 
     n <- n + 1
   print(paste("percentile count = ", n))
-  x <- seq(-sds, sds, length = n) #[1:(n/2)]
-  dens <- dnorm(x)
-  #dens <- c(dnorm(x), rev(1 - dnorm(x)))
+  x <- seq(-sds, sds, length = n)[1:(n/2)]
+  dens <- c(dnorm(x), rev(1 - dnorm(x)))
   return(dens)
 }
 
@@ -522,7 +516,7 @@ shinyServer(function(input, output, session) {
     # smooth data frame values and parameters
     # expand uncertainties
     smoothing <- 10
-    pps = get_percentiles(n=200)
+    pps = get_percentiles(n=100)
     #seq(0.025,0.975,0.025)
     npps <- length(pps)
     print(paste("length pps =", length(pps)))
@@ -572,7 +566,8 @@ shinyServer(function(input, output, session) {
            medlab = NULL,
            style = "fan",
            probs = pps,
-           fan.col = norm.density.palette(), # colorRampPalette(c("tomato", "white")),
+           fan.col = norm.density.palette(), 
+           #fan.col = colorRampPalette(c("tomato", "white")),
            xlab = input$xLabel,
            ylab = input$modeLabel,
            main = input$mainTitle

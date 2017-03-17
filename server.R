@@ -324,9 +324,9 @@ fan0 <- function (data = NULL, data.type = "simulations", style = "fan",
 #   )
 # }
 
-norm.density.palette <- function(sds = 4, colmax = "tomato", colmin = "white", gamma = 3, scale = 0.5) {
+norm.density.palette <- function(sds = 4, colmax = "tomato", colmin = "transparent", gamma = 1, scale = 1) {
   rgbmax <- col2rgb(colmax, alpha=TRUE)
-  rgbmin <- c(col2rgb(colmax, alpha = FALSE), 0)
+  rgbmin <- c(col2rgb(colmin, alpha = FALSE), 0)
   if (gamma <= 0) 
     stop("gamma must be greater than 0")
   return(
@@ -337,12 +337,32 @@ norm.density.palette <- function(sds = 4, colmax = "tomato", colmin = "white", g
       dens <- dnorm(x)
       dens <- dens/max(dens) * scale
       
-      p <- dens[1:(n-1)]^gamma
-      cols <- rgb(p * rgbmax[1] + (1 - p) * rgbmin[1], 
-                  p * rgbmax[2] + (1 - p) * rgbmin[2], 
-                  p * rgbmax[3] + (1 - p) * rgbmin[3], 
-                  alpha = p * rgbmax[4] + (1 - p) * rgbmin[4], 
-                  maxColorValue = 255)
+      # p <- dens[1:(n-1)]^gamma
+      # cols <- rgb(p * rgbmax[1] + (1 - p) * rgbmin[1], 
+      #             p * rgbmax[2] + (1 - p) * rgbmin[2], 
+      #             p * rgbmax[3] + (1 - p) * rgbmin[3], 
+      #             alpha = p * rgbmax[4] + (1 - p) * rgbmin[4], 
+      #             maxColorValue = 255)
+      # 
+      # rgbmax <- col2rgb(colmax, alpha = TRUE)
+      # rgbmin <- if (colmin == "transparent") 
+      #   c(col2rgb(colmax, alpha = FALSE), 0)
+      # else col2rgb(colmin, alpha = TRUE)
+      
+      if (gamma <= 0) 
+        stop("gamma must be greater than 0")
+      p <- dens[1:(n - 1)]^gamma
+      if (colmin == "transparent") 
+        cols <- rgb(p * rgbmax[1] + (1 - p) * rgbmin[1], 
+                    p * rgbmax[2] + (1 - p) * rgbmin[2], 
+                    p * rgbmax[3] + (1 - p) * rgbmin[3], 
+                    alpha = p * rgbmax[4] + (1 - p) * rgbmin[4], 
+                    maxColorValue = 255)
+      else cols <- rgb(p * rgbmax[1] + (1 - p) * rgbmin[1], 
+                       p * rgbmax[2] + (1 - p) * rgbmin[2], 
+                       p * rgbmax[3] + (1 - p) * rgbmin[3], 
+                       alpha = rgbmax[4], maxColorValue = 255)
+      
       return(cols)
     }
   )
@@ -353,8 +373,9 @@ get_percentiles <- function(n = 10, sds = 4, scale = 1) {
   if (n %% 2 != 0) 
     n <- n + 1
   print(paste("percentile count = ", n))
-  x <- seq(-sds, sds, length = n)[1:(n/2)]
-  dens <- c(dnorm(x), rev(1 - dnorm(x)))
+  x <- seq(-sds, sds, length = n) #[1:(n/2)]
+  dens <- dnorm(x)
+  #dens <- c(dnorm(x), rev(1 - dnorm(x)))
   return(dens)
 }
 

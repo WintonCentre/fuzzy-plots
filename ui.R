@@ -26,13 +26,15 @@ shinyUI(pageWithSidebar(
     ),
     
     inputPanel(
-    #   selectInput("x", "Independent variable:", c(), "x"),
-       textInput("xLabel", "X Axis label:", "time")
+      selectInput("t", "Choose column for time:", c("t"), "x"),
+      textInput("tLabel", "Time axis label:", "time")
     ),
+    
     inputPanel(
-      textInput("modeLabel", "Y Axis label:", "values"),
-      selectInput("mode", "Dependent variable:", c("values"), "values")
+      selectInput("mode", "Choose column for value", c("values"), "values"),
+      textInput("modeLabel", "Value axis label:", "values")
     ),
+    
     inputPanel(
       selectInput("sd", "Uncertainty:", c(), "sd"),
       numericInput("sd_unit", "Uncertainty unit (in sd)", 1, min = 0)

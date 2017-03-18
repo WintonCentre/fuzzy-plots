@@ -18,8 +18,6 @@ fan <- function (data = NULL, data.type = "simulations", style = "fan",
           ylim = range(data) * 0.8, ...) 
 {
   
-  print("Hello there")
-  
   if (add == TRUE) 
     plot(data[, 1], type = "n", ylim = ylim, ...)
   if (!(data.type %in% c("values", "simulations"))) 
@@ -296,34 +294,6 @@ fan0 <- function (data = NULL, data.type = "simulations", style = "fan",
 #   check column E 2013 to present \pm 73,000
 #   column I \pm 0.1
 
-# 
-# norm.density.palette <- function(sds = 2, colmax = "tomato", colmin = "white", gamma = 1, scale = 1) {
-#   rgbmax <- col2rgb(colmax, alpha=TRUE)
-#   rgbmin <- c(col2rgb(colmax, alpha = FALSE), 0)
-#   if (gamma <= 0) 
-#     stop("gamma must be greater than 0")
-#   return(
-#     function(n) {
-#       if( n %% 2 == 0) 
-#          n <- n + 1
-#       print(paste("n=",n))
-#       pal <- seq(n)
-#       x <- seq(-2, 2, length=n)
-#       dens <- dnorm(x)
-#       dens <- dens/max(dens) * scale
-#       print(dens)
-#       
-#       p <- dens[1:n]^gamma
-#       cols <- rgb(p * rgbmax[1] + (1 - p) * rgbmin[1], 
-#                   p * rgbmax[2] + (1 - p) * rgbmin[2], 
-#                   p * rgbmax[3] + (1 - p) * rgbmin[3], 
-#                   alpha = p * rgbmax[4] + (1 - p) * rgbmin[4], 
-#                   maxColorValue = 255)
-#       return(cols)
-#     }
-#   )
-# }
-
 norm.density.palette <- function(sds = 4, colmax = "tomato", colmin = "white", gamma = 1, scale = 1) {
   rgbmax <- col2rgb(colmax, alpha=TRUE)
   rgbmin <- c(col2rgb(colmin, alpha = FALSE), 0)
@@ -337,17 +307,9 @@ norm.density.palette <- function(sds = 4, colmax = "tomato", colmin = "white", g
       dens <- dnorm(x)
       dens <- dens/max(dens) * scale
       
-      # p <- dens[1:(n-1)]^gamma
-      # cols <- rgb(p * rgbmax[1] + (1 - p) * rgbmin[1], 
-      #             p * rgbmax[2] + (1 - p) * rgbmin[2], 
-      #             p * rgbmax[3] + (1 - p) * rgbmin[3], 
-      #             alpha = p * rgbmax[4] + (1 - p) * rgbmin[4], 
-      #             maxColorValue = 255)
-      # return(cols)
-      # 
       if (gamma <= 0) 
         stop("gamma must be greater than 0")
-      p <- dens[1:n]^gamma
+      p <- dens[1:(n-1)]^gamma
       if (colmin == "transparent") 
         cols <- rgb(p * rgbmax[1] + (1 - p) * rgbmin[1], 
                     p * rgbmax[2] + (1 - p) * rgbmin[2], 
@@ -388,6 +350,8 @@ shinyServer(function(input, output, session) {
     
     val <- matrix(NA, nrow = bands, ncol = k)
     for (i in 1:k) {
+      # print(percentiles)
+      # print(df)
       val[, i] <- qsplitnorm(p = percentiles,
                              mode = df$mode[i],
                              sd = df$sd[i] * sd_unit,
@@ -447,86 +411,74 @@ shinyServer(function(input, output, session) {
       if (is.null(inFile))
         return(NULL)
       
-      return(read.csv(inFile$datapath, header = TRUE))
+      return(read.csv(inFile$datapath, header = TRUE, stringsAsFactors = FALSE))
     }
   })
+  
+  # Update dropdowns in UI with column names read from csv file
+  update_sidePanel <- function(df1) {
+    internal_names <- c("mode","sd","t")
+    for (i in 1:length(internal_names)) {
+      previous_choice = input[[internal_names[i]]]
+      if (previous_choice == "" || !(previous_choice %in% names(df1))) {
+        updateSelectInput(session, internal_names[i],
+                          choices = names(df1),
+                          selected = internal_names[i])
+      }
+    }
+    
+    if (input$modeLabel == "" & input$mode != "") {
+      updateTextInput(session, "modeLabel", value = input$mode)
+    }
+    
+    if (input$mode == "" | input$sd == "")
+      return(NULL)
+    
+  }
+  
   
   output$df <- renderDataTable({
     df1 <- load_data()
     if (is.null(df1))
       return(NULL)
     
-    
-    # Update dropdowns in UI with column names read from csv file
-    internal_names <- c("mode","sd")
-    for (i in 1:length(internal_names)) {
-      previous_choice = input[[internal_names[i]]]
-      print(previous_choice)
-      if (previous_choice == "" || !(previous_choice %in% names(df1))) {
-        updateSelectInput(session, internal_names[i],
-                          choices = names(df1),
-                          selected = internal_names[i])
-      }
-    }
-    
-    if (input$modeLabel == "" & input$mode != "") {
-      updateTextInput(session, "modeLabel", value = input$mode)
-    }
-    
-    
+    update_sidePanel(df1)
+
     # first parameter to renderDataTable is df1                                                                                                                                                                                  
     df1                                                                                                                                                                                                                          
   }, options = list(filter = FALSE, searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE))                                                                                                                          
   
   
+
   output$plot <- renderPlot({
     
-  
     df1 <- load_data()
     if (is.null(df1))
       return(NULL)
     
-    # Update dropdowns in UI with column names read from csv file
-    internal_names <- c("mode","sd")
-    for (i in 1:length(internal_names)) {
-      previous_choice = input[[internal_names[i]]]
-      if (previous_choice == "" || !(previous_choice %in% names(df1))) {
-        updateSelectInput(session, internal_names[i],
-                          choices = names(df1),
-                          selected = internal_names[i])
-      }
-    }
-    
-    if (input$modeLabel == "" & input$mode != "") {
-      updateTextInput(session, "modeLabel", value = input$mode)
-    }
-    
-    if (input$mode == "" || input$sd == "")
-      return(NULL)
-    
+    update_sidePanel(df1)
     
     # redefine df1 with internal names, "x", "mode", and "sd".
-    if (input$mode != "" & input$sd != "") {
-      #      x <- df1[[input$x]]
-      mode <- df1[[input$mode]]
-      sd <- df1[[input$sd]]
-      df1 <- data.frame(mode = mode, sd = sd)
-    }
+    if (input$mode != "") mode <- df1[[input$mode]] else stop("Please choose a values column")
+    if (input$t != "") t <- df1[[input$t]] else stop("Please choose a time column")
+    if (input$sd != "") sd <- df1[[input$sd]] else stop("Please choose an uncertainty column")
+    df1 <- data.frame(mode = mode, t = t, sd = sd, X = df1$X)
+    
+    # if (input$mode != "" & input$sd != "") {
+    #   #      x <- df1[[input$x]]
+    #   mode <- df1[[input$mode]]
+    #   sd <- df1[[input$sd]]
+    #   df1 <- data.frame(mode = mode, sd = sd)
+    # }
+    
     
     # smooth data frame values and parameters
     # expand uncertainties
     smoothing <- 10
-    pps = get_percentiles(n=100)
-    #seq(0.025,0.975,0.025)
+    pps = get_percentiles(n=200)
     npps <- length(pps)
     print(paste("length pps =", length(pps)))
     mid <- floor(npps / 2)
-
-    # pps =  psplitnorm(c(seq(-3,-2, 0.5), 
-    #                     seq(-1.98,-1, 0.02), 
-    #                     seq(-0.99,0.99,0.01), 
-    #                     seq(1, 1.98, 0.02), 
-    #                     seq(2, 3, 0.5)))
 
     smoothed_expanded <- smooth_and_expand(df = df1, smoothing = smoothing,
                                             percentiles = pps
@@ -549,34 +501,45 @@ shinyServer(function(input, output, session) {
          type = "p", pch = 18,
          xlim = c(1,ncol(original_val)),
          ylim = c(min_smoothed, max_smoothed),
-         xlab = input$xLabel,
+         xaxt = "n",
+         xlab = input$tLabel,
          ylab = input$modeLabel,
-         main = input$mainTitle)                                                                                                                                                                                                                        
-    axis(1, at=time(1:ncol(original_val)), labels = TRUE)                                                                                                                                                                        
+         main = input$mainTitle)
+    
+    ticks <- 1:length(df1$t)
+    for (i in 1:length(df1$t)) {
+      if ((i - 1) %% 6 != 0)
+        ticks[[i]] <- NA
+    }
+    #axis(1, at = ticks, labels = df1$t)
+    
+    
     if (input$expand) {
-      print(paste("nrows =", nrow(smoothed_val)))
+      #print(paste("nrows =", nrow(smoothed_val)))
       fan0(smoothed_val,
-           data.type = "values",
            start = 1,
            frequency = smoothing,
+           data.type = "values",
            xlim = c(1,ncol(original_val)),
            ylim = c(min_smoothed, max_smoothed),
            type = "percentile",
-           med.ln = TRUE,
+           med.ln = FALSE,
            medlab = NULL,
            style = "fan",
            probs = pps,
            fan.col = norm.density.palette(), 
-           #fan.col = colorRampPalette(c("tomato", "white")),
-           xlab = input$xLabel,
+           xlab = input$tLabel,
            ylab = input$modeLabel,
-           main = input$mainTitle
+           main = input$mainTitle,
+           xaxt = "n"
            )
+
+      axis(1, at = ticks, labels = df1$t)
     }
     
-    if(!input$expand) {
-      lines(ts(med, start = start(med), frequency = smoothing), col = "black")
-    }
+    # if(!input$expand) {
+    #   lines(ts(med, start = start(med), frequency = smoothing), col = "black")
+    # }
   })
   
 })

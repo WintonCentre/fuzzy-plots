@@ -9,34 +9,40 @@ shinyUI(pageWithSidebar(
   # Sidebar with a slider input for number of observations
   sidebarPanel(
     inputPanel(
+      textInput("mainTitle", "Plot title:", "Time Series")
+    ),
+    
+    inputPanel(
       shinyjs::useShinyjs(),
       
-      checkboxInput("use_sample_data", "Use sample data", TRUE),
+            #checkboxInput("use_sample_data", "Use sample data", TRUE),
+      radioButtons("use_sample_data", "Use sample data:", c("Sample1" = "sample1",
+                                                                  "Sample2" = "sample2",
+                                                                  "Upload CSV" = "upload")),
       
       fileInput("file1", "Choose CSV file to upload. First row must contain headers",
                 accept = c(
                   "text/csv",
                   "text/comma-separated-values,text/plain",
                   ".csv")
-      ),
+      )
       #checkboxInput("header", "File contains headers in first row", TRUE),
-      textInput("mainTitle", "Plot title:", "Time Series"),
-      checkboxInput("expand", "Show uncertainty", FALSE)
+      #checkboxInput("expand", "Show uncertainty", FALSE)
       
     ),
     
     inputPanel(
-      selectInput("t", "Choose column for time:", c("t"), "x"),
+      selectInput("t", "Optional time column:", c("t"), "x"),
       textInput("tLabel", "Time axis label:", "time")
     ),
     
     inputPanel(
-      selectInput("mode", "Choose column for value", c("values"), "values"),
+      selectInput("mode", "Value column:", c("values"), "values"),
       textInput("modeLabel", "Value axis label:", "values")
     ),
     
     inputPanel(
-      selectInput("sd", "Uncertainty:", c(), "sd"),
+      selectInput("sd", "Uncertainty column:", c(), "sd"),
       numericInput("sd_unit", "Uncertainty unit (in sd)", 1, min = 0)
       
     )
@@ -48,7 +54,14 @@ shinyUI(pageWithSidebar(
       tabPanel("Data", 
                dataTableOutput("df")),
       tabPanel("Plot", 
-               plotOutput("plot", height = "600px"))
+               plotOutput("plot", height = "600px")),
+      tabPanel("Smoothed", 
+               plotOutput("plot_smooth", height = "600px")),
+      tabPanel("Uncertainty (Coarse)", 
+               plotOutput("plot_uncertain_coarse", height = "600px")),
+      tabPanel("Uncertainty (Detail)", 
+               plotOutput("plot_uncertain_detail", height = "600px"))
+      
       # tabPanel("output", verbatimTextOutput("value")),
     )
   )

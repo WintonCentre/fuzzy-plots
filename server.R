@@ -49,11 +49,6 @@ fan <- function (data = NULL, data.type = "simulations", style = "fan",
     if (data.type == "values") {
       pp <- as.matrix(data)
       if (type == "percentile" & length(p) != nrow(pp)) {
-        print(paste("length(p)= ",length(p)))
-        print(paste("nrow(pp)= ", nrow(pp)))
-        
-        print(p)
-        print(pp)
         stop("probs must correspond to the nrows of data if data.type==values and type is percentile")
       }
       if (type == "interval" & length(probs) != 2 * nrow(pp)) {
@@ -326,14 +321,22 @@ norm.density.palette <- function(sds = 4, colmax = "tomato", colmin = "white", g
 }
 
 
-get_percentiles <- function(n = 10, sds = 4, scale = 1) {
-  if (n %% 2 != 0) 
-    n <- n + 1
-  print(paste("percentile count = ", n))
-  x <- seq(-sds, sds, length = n)[1:(n/2)]
+get_percentiles <- function(n = 1, sds = 4) {
+  m <- 2*n*sds+1
+  x <- seq(-4, 4, length = m)[1:(m/2 + 1)]
+  print(x)
   dens <- c(dnorm(x), rev(1 - dnorm(x)))
   return(dens)
 }
+
+# get_percentiles <- function(n = 12, sds = 3, scale = 1) {
+#   if (n %% 2 != 0) 
+#     n <- n + 1
+#   x <- seq(-sds, sds, length = n)[1:(n/2)]
+#   print(x)
+#   dens <- c(dnorm(x), rev(1 - dnorm(x)))
+#   return(dens)
+# }
 
 
 
@@ -350,8 +353,6 @@ shinyServer(function(input, output, session) {
     
     val <- matrix(NA, nrow = bands, ncol = k)
     for (i in 1:k) {
-      # print(percentiles)
-      # print(df)
       val[, i] <- qsplitnorm(p = percentiles,
                              mode = df$mode[i],
                              sd = df$sd[i] * sd_unit,
@@ -399,10 +400,11 @@ shinyServer(function(input, output, session) {
   }
   
   load_data <- reactive({
-    if (input$use_sample_data) {
+    if (input$use_sample_data  == "sample1" || input$use_sample_data == "sample2") {
       shinyjs::hide(id = "file1", anim = TRUE, animType = "slide", time = 0.33)
       #shinyjs::hideElement(id = "header", anim = TRUE, animType = "slide", time = 0.33)
-      return(readRDS("data/sample.rds"))
+      if (input$use_sample_data == "sample1") inFile <- "sample1" else inFile <- "sample2"
+      return(readRDS(paste0("data/", inFile, ".rds")))
     }
     else {
       shinyjs::show(id = "file1", anim = TRUE, animType = "slide", time = 0.33)
@@ -416,8 +418,13 @@ shinyServer(function(input, output, session) {
   })
   
   # Update dropdowns in UI with column names read from csv file
-  update_sidePanel <- function(df1) {
-    internal_names <- c("mode","sd","t")
+  update_sidePanel <- function(df1, plot_type) {
+    
+    if (plot_type == "coarse" | plot_type == "detailed")
+      internal_names <- c("mode", "sd", "t")
+    else
+      internal_names <- c("mode", "t")
+
     for (i in 1:length(internal_names)) {
       previous_choice = input[[internal_names[i]]]
       if (previous_choice == "" || !(previous_choice %in% names(df1))) {
@@ -442,54 +449,52 @@ shinyServer(function(input, output, session) {
     if (is.null(df1))
       return(NULL)
     
-    update_sidePanel(df1)
+    update_sidePanel(df1, "detailed")
 
     # first parameter to renderDataTable is df1                                                                                                                                                                                  
     df1                                                                                                                                                                                                                          
   }, options = list(filter = FALSE, searching = FALSE, paging = FALSE, info = FALSE, ordering = FALSE))                                                                                                                          
   
-  
-
-  output$plot <- renderPlot({
-    
+  renderPlotWithParameters <- function(plot_type) {
     df1 <- load_data()
     if (is.null(df1))
       return(NULL)
     
-    update_sidePanel(df1)
+    update_sidePanel(df1, plot_type)
     
-    # redefine df1 with internal names, "x", "mode", and "sd".
-    if (input$mode != "") mode <- df1[[input$mode]] else stop("Please choose a values column")
-    if (input$t != "") t <- df1[[input$t]] else stop("Please choose a time column")
-    if (input$sd != "") sd <- df1[[input$sd]] else stop("Please choose an uncertainty column")
+    # redefine df1 with internal names, "t", "mode", and "sd".
+    if (trimws(input$mode) != "") mode <- df1[[trimws(input$mode)]] else stop("Please choose a values column")
+    if (trimws(input$t) != "") t <- df1[[trimws(input$t)]] else t <- 1:nrow(df1)
+    
+    sd <- rep.int(0.1, nrow(df1))
+    if(plot_type == "coarse" | plot_type == "detailed")
+      if (trimws(input$sd) != "") {
+        sd <- df1[[trimws(input$sd)]]
+      }
+    else {
+      #stop("Please choose an uncertainty column")
+    }
     df1 <- data.frame(mode = mode, t = t, sd = sd)
-    
-    # if (input$mode != "" & input$sd != "") {
-    #   #      x <- df1[[input$x]]
-    #   mode <- df1[[input$mode]]
-    #   sd <- df1[[input$sd]]
-    #   df1 <- data.frame(mode = mode, sd = sd)
-    # }
-    
     
     # smooth data frame values and parameters
     # expand uncertainties
     smoothing <- 10
-    pps = get_percentiles(n=200)
+    if(plot_type == "coarse")
+      pps = get_percentiles(n = 1)
+    else 
+      pps = get_percentiles(n = 19)
     npps <- length(pps)
-    print(paste("length pps =", length(pps)))
-    mid <- floor(npps / 2)
 
+    mid <- floor(npps / 2)
+    
     smoothed_expanded <- smooth_and_expand(df = df1, smoothing = smoothing,
-                                            percentiles = pps
-                                             #c(0.025, 0.15, 0.30, 0.70, 0.85, 0.975)
-                                             )
+                                           percentiles = pps
+                                           #c(0.025, 0.15, 0.30, 0.70, 0.85, 0.975)
+    )
     
     sv <- smoothed_expanded$smoothed_val
     min_smoothed <- floor(min(sv))
     max_smoothed <- ceiling(max(sv))
-    print(min_smoothed)
-    print(max_smoothed)
     
     original_val <- smoothed_expanded$original_val
     smoothed_val <- smoothed_expanded$smoothed_val
@@ -506,6 +511,7 @@ shinyServer(function(input, output, session) {
          ylab = input$modeLabel,
          main = input$mainTitle)
     
+    
     ticks <- 1:length(df1$t)
     for (i in 1:length(df1$t)) {
       if (df1$t[[i]] == "")
@@ -514,8 +520,7 @@ shinyServer(function(input, output, session) {
     axis(1, at = ticks, labels = df1$t)
     
     
-    if (input$expand) {
-      #print(paste("nrows =", nrow(smoothed_val)))
+    if (plot_type == "coarse" || plot_type == "detailed") {
       fan0(smoothed_val,
            start = 1,
            frequency = smoothing,
@@ -532,14 +537,32 @@ shinyServer(function(input, output, session) {
            ylab = input$modeLabel,
            main = input$mainTitle,
            xaxt = "n"
-           )
-
+      )
+      
       axis(1, at = ticks, labels = df1$t)
     }
     
-    # if(!input$expand) {
-    #   lines(ts(med, start = start(med), frequency = smoothing), col = "black")
-    # }
+    if (plot_type == "smoothed") {
+      lines(ts(med, start = start(med), frequency = smoothing), col = "black")
+    }
+    
+  }
+
+  output$plot <- renderPlot({
+    renderPlotWithParameters("basic")
   })
+  
+  output$plot_smooth <- renderPlot({
+    renderPlotWithParameters("smoothed")
+  })
+  
+  output$plot_uncertain_coarse <- renderPlot({
+    renderPlotWithParameters("coarse")
+  })
+  
+  output$plot_uncertain_detail <- renderPlot({
+    renderPlotWithParameters("detailed")
+  })
+  
   
 })

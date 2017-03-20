@@ -462,7 +462,7 @@ shinyServer(function(input, output, session) {
     if (input$mode != "") mode <- df1[[input$mode]] else stop("Please choose a values column")
     if (input$t != "") t <- df1[[input$t]] else stop("Please choose a time column")
     if (input$sd != "") sd <- df1[[input$sd]] else stop("Please choose an uncertainty column")
-    df1 <- data.frame(mode = mode, t = t, sd = sd, X = df1$X)
+    df1 <- data.frame(mode = mode, t = t, sd = sd)
     
     # if (input$mode != "" & input$sd != "") {
     #   #      x <- df1[[input$x]]
@@ -508,10 +508,10 @@ shinyServer(function(input, output, session) {
     
     ticks <- 1:length(df1$t)
     for (i in 1:length(df1$t)) {
-      if ((i - 1) %% 6 != 0)
+      if (df1$t[[i]] == "")
         ticks[[i]] <- NA
     }
-    #axis(1, at = ticks, labels = df1$t)
+    axis(1, at = ticks, labels = df1$t)
     
     
     if (input$expand) {

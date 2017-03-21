@@ -323,11 +323,18 @@ norm.density.palette <- function(sds = 4, colmax = "tomato", colmin = "white", g
 
 get_percentiles <- function(n = 1, sds = 4) {
   m <- 2*n*sds+1
-  x <- seq(-4, 4, length = m)[1:(m/2 + 1)]
-  print(x)
+  x <- seq(-4, 4, length = m)[1:((m-1)/2)]
   dens <- c(dnorm(x), rev(1 - dnorm(x)))
   return(dens)
 }
+
+# get_percentiles <- function(n = 1, sds =4) {
+#   m <- 2*n*sds+1
+#   x <- seq(-4, 4, length = m)
+#   y <- pnorm(x)
+#   return(y)
+# }
+
 
 # get_percentiles <- function(n = 12, sds = 3, scale = 1) {
 #   if (n %% 2 != 0) 

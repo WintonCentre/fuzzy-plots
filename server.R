@@ -508,11 +508,21 @@ shinyServer(function(input, output, session) {
     
     med <- smoothed_expanded$med
     par(mar = c(4,4,4,4))    
-    grid()                                                                                                                                             
+    grid()
+    
+    if(input$autorange) {
+      ymin <- min_smoothed
+      ymax <- max_smoothed
+    }
+    else {
+      ymin <- input$ymin
+      ymax <- input$ymax
+    }
+    
     plot((original_val[mid,] + original_val[mid+1,])/2,
          type = "p", pch = 18,
          xlim = c(1,ncol(original_val)),
-         ylim = c(min_smoothed, max_smoothed),
+         ylim = c(ymin, ymax), #c(min_smoothed, max_smoothed),
          xaxt = "n",
          xlab = input$tLabel,
          ylab = input$modeLabel,
@@ -533,7 +543,7 @@ shinyServer(function(input, output, session) {
            frequency = smoothing,
            data.type = "values",
            xlim = c(1,ncol(original_val)),
-           ylim = c(min_smoothed, max_smoothed),
+           ylim = c(ymin, ymax), #c(min_smoothed, max_smoothed),
            type = "percentile",
            med.ln = FALSE,
            medlab = NULL,

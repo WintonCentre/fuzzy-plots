@@ -38,7 +38,10 @@ shinyUI(pageWithSidebar(
     
     inputPanel(
       selectInput("mode", "Value column:", c("values"), "values"),
-      textInput("modeLabel", "Value axis label:", "values")
+      textInput("modeLabel", "Value axis label:", "values"),
+      numericInput("ymin", "Value axis minimum:", 0),
+      numericInput("ymax", "Value axis maximum:", 1),
+      checkboxInput("autorange", "Set value axis range automatically", TRUE)
     ),
     
     inputPanel(

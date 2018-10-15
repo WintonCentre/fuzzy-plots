@@ -18,3 +18,7 @@ smoothing <- 1
 server.R#523
 Change type parameter of 'plot' from 'p' to 'l'
 type = 'l'
+
+### Percentages for boundaries
+See server.R 488-499.
+Probably reinstate #499 with the percentages we want.

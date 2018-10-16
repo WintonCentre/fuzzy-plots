@@ -2,20 +2,38 @@ library(shiny)
 library(fanplot)
 library(shinyjs)
 
-fan <- function (data = NULL, data.type = "simulations", style = "fan", 
-          type = "percentile", probs = if (type == "percentile") seq(0.01, 
-                                                                     0.99, 0.01) else c(0.5, 0.8, 0.95), start = 1, frequency = 1, 
-          anchor = NULL, anchor.time = NULL, fan.col = heat.colors, 
-          alpha = if (style == "spaghetti") 0.5 else 1, n.fan = NULL, 
-          ln = if (length(probs) < 10) probs else probs[round(probs, 
-                                                              2) %in% round(seq(0.1, 0.9, 0.1), 2)], ln.col = if (style == 
-                                                                                                                  "spaghetti") "gray" else NULL, med.ln = if (type == "interval") TRUE else FALSE, 
-          med.col = "orange", rlab = ln, rpos = 4, roffset = 0.1, rcex = 0.8, 
-          rcol = NULL, llab = FALSE, lpos = 2, loffset = roffset, lcex = rcex, 
-          lcol = rcol, upplab = "U", lowlab = "L", medlab = if (type == 
-                                                                "interval") "M" else NULL, n.spag = 30, space = if (style == 
-                                                                                                                    "boxplot") 1/frequency else 0.9/frequency, add = FALSE, 
-          ylim = range(data) * 0.8, ...) 
+fan <- function (data = NULL, 
+                 data.type = "simulations", 
+                 style = "fan", 
+                 type = "percentile", 
+                 probs = if (type == "percentile") seq(0.01, 0.99, 0.01) else c(0.5, 0.8, 0.95), 
+                 start = 1, 
+                 frequency = 1, 
+                 anchor = NULL, 
+                 anchor.time = NULL, 
+                 fan.col = heat.colors, 
+                 alpha = if (style == "spaghetti") 0.5 else 1, n.fan = NULL, 
+                 ln = if (length(probs) < 10) probs else probs[round(probs, 2) %in% round(seq(0.1, 0.9, 0.1), 2)], 
+                 ln.col = if (style == "spaghetti") "gray" else NULL, 
+                 med.ln = TRUE, #if (type == "interval") TRUE else FALSE, 
+                 med.col = "black", #orange", 
+                 rlab = ln, 
+                 rpos = 4, 
+                 roffset = 0.1, 
+                 rcex = 0.8, 
+                 rcol = NULL, 
+                 llab = FALSE, 
+                 lpos = 2, 
+                 loffset = roffset, 
+                 lcex = rcex, 
+                 lcol = rcol, 
+                 upplab = "U", 
+                 lowlab = "L", 
+                 medlab = if (type == "interval") "M" else NULL, 
+                 n.spag = 30, 
+                 space = if (style == "boxplot") 1/frequency else 0.9/frequency, 
+                 add = FALSE, 
+                 ylim = range(data) * 0.8, ...) 
 {
   
   if (add == TRUE) 
@@ -252,11 +270,18 @@ fan <- function (data = NULL, data.type = "simulations", style = "fan",
   box()
 }
 
-fan0 <- function (data = NULL, data.type = "simulations", style = "fan", 
-          type = "percentile", probs = if (type == "percentile") seq(0.01, 
-                                                                     0.99, 0.01) else c(0.5, 0.8, 0.95), start = 1, frequency = 1, 
-          anchor = NULL, anchor.time = NULL, fan.col = heat.colors, 
-          alpha = if (style == "spaghetti") 0.5 else 1, n.fan = NULL, 
+fan0 <- function (data = NULL, 
+                  data.type = "simulations", 
+                  style = "fan", 
+                  type = "percentile", 
+                  probs = if (type == "percentile") seq(0.01, 0.99, 0.01) else c(0.5, 0.8, 0.95), 
+                  start = 1, 
+                  frequency = 1, 
+                  anchor = NULL, 
+                  anchor.time = NULL, 
+                  fan.col = heat.colors, 
+                  alpha = if (style == "spaghetti") 0.5 else 1, 
+                  n.fan = 10, # was NULL 
           ln = NULL, ln.col = if (style == "spaghetti") "gray" else NULL, 
           med.ln = if (type == "interval") TRUE else FALSE, med.col = "orange", 
           rlab = ln, rpos = 4, roffset = 0.1, rcex = 0.8, rcol = NULL, 
@@ -289,7 +314,7 @@ fan0 <- function (data = NULL, data.type = "simulations", style = "fan",
 #   check column E 2013 to present \pm 73,000
 #   column I \pm 0.1
 
-norm.density.palette <- function(sds = 4, colmax = "tomato", colmin = "white", gamma = 1, scale = 1) {
+norm.density.palette <- function(sds = 8, colmax = "tomato", colmin = "white", gamma = 1, scale = 1) {
   rgbmax <- col2rgb(colmax, alpha=TRUE)
   rgbmin <- c(col2rgb(colmin, alpha = FALSE), 0)
   if (gamma <= 0) 
@@ -320,6 +345,10 @@ norm.density.palette <- function(sds = 4, colmax = "tomato", colmin = "white", g
   )
 }
 
+# get_percentiles <- function(n = 1, sds = 4) {
+#   return (c(0.025, 0.2, 0.35, 0.65, 0.8, 0.975))
+#     
+# }
 
 get_percentiles <- function(n = 1, sds = 4) {
   m <- 2*n*sds+1
@@ -485,7 +514,7 @@ shinyServer(function(input, output, session) {
     
     # smooth data frame values and parameters
     # expand uncertainties
-    smoothing <- 10
+    smoothing <- 1
     if(plot_type == "coarse")
       pps = get_percentiles(n = 1)
     else 
@@ -545,11 +574,11 @@ shinyServer(function(input, output, session) {
            xlim = c(1,ncol(original_val)),
            ylim = c(ymin, ymax), #c(min_smoothed, max_smoothed),
            type = "percentile",
-           med.ln = FALSE,
+           med.ln = TRUE,#FALSE,
            medlab = NULL,
            style = "fan",
            probs = pps,
-           fan.col = norm.density.palette(), 
+           fan.col = norm.density.palette(), #colorRampPalette(colors = rev(brewer.pal(9,"Oranges"))), #norm.density.palette(), 
            xlab = input$tLabel,
            ylab = input$modeLabel,
            main = input$mainTitle,

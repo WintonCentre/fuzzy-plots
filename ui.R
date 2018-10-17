@@ -58,7 +58,7 @@ shinyUI(pageWithSidebar(
                dataTableOutput("df")),
       tabPanel("Plot", 
                plotOutput("plot", height = "600px")),
-      tabPanel("Smoothed", 
+      tabPanel("Line only", 
                plotOutput("plot_smooth", height = "600px")),
       tabPanel("Uncertainty (Coarse)", 
                plotOutput("plot_uncertain_coarse", height = "600px")),

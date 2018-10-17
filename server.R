@@ -345,17 +345,17 @@ norm.density.palette <- function(sds = 8, colmax = "tomato", colmin = "white", g
   )
 }
 
-# get_percentiles <- function(n = 1, sds = 4) {
-#   return (c(0.025, 0.2, 0.35, 0.65, 0.8, 0.975))
-#     
-# }
-
 get_percentiles <- function(n = 1, sds = 4) {
-  m <- 2*n*sds+1
-  x <- seq(-4, 4, length = m)[1:((m-1)/2)]
-  dens <- c(dnorm(x), rev(1 - dnorm(x)))
-  return(dens)
+  return (c(0.025, 0.2, 0.35, 0.65, 0.8, 0.975))
+
 }
+
+# get_percentiles <- function(n = 1, sds = 3) {
+#   m <- 2*n*sds+1
+#   x <- seq(-3, 3, length = m)[1:((m-1)/2)]
+#   dens <- c(dnorm(x), rev(1 - dnorm(x)))
+#   return(dens)
+# }
 
 # get_percentiles <- function(n = 1, sds =4) {
 #   m <- 2*n*sds+1

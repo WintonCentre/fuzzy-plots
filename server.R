@@ -571,7 +571,7 @@ shinyServer(function(input, output, session) {
     }
     
 #    if (plot_type == "smoothed") {
-      lines(ts(med, start = start(med), frequency = smoothing), col = "black")
+      lines(ts(med, start = start(med), frequency = smoothing), col = "maroon", lwd = 3)
 #    }
     
   }
